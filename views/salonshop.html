@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salon</title>
+    <link rel="stylesheet" href="../main/salonshop.css">
+</head>
+<body>
+    <div class="salon-details" id="salon-details">
+        <h2>Salon Details</h2>
+        <p><strong>Name:</strong> <span id="salon-name">Loading...</span></p>
+        <p><strong>Location:</strong> <span id="salon-location">Loading...</span></p>
+        <p><strong>Contact:</strong> <span id="salon-contact">Loading...</span></p>
+        <p><strong>Owner:</strong> <span id="salon-owner">Loading...</span></p>
+    </div>
+
+    <div class="buttons">
+        <button class="add-services" onclick="showServiceForm()">Add Services</button>
+    </div>
+
+    <ul class="services-list" id="services-list">
+        <!-- Dynamic list of services -->
+    </ul>
+
+    <div id="overlay"></div>
+
+    <div class="add-service-form" id="add-service-form">
+        <h3>Add Service</h3>
+        <input type="text" id="service-name" placeholder="Service Name" required>
+        <input type="number" id="service-price" placeholder="Price" required>
+        <input type="text" id="service-duration" placeholder="Duration (e.g., 30 min)" required>
+        <input type="text" id="service-description" placeholder="Service Description" required>
+
+        <button onclick="addService()">Submit</button>
+        <button onclick="hideServiceForm()">Cancel</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const params = new URLSearchParams(window.location.search);
+        const salonId = params.get('salonId');
+        const servicesList = document.getElementById('services-list');
+
+        async function fetchSalonDetails() {
+            try {
+                const response = await axios.get(`http://localhost:3000/salons/get-salon/${salonId}`, {
+                    headers: { "Authorization": token },
+                });
+                const salon = response.data;
+
+                document.getElementById('salon-name').innerText = salon.name;
+                document.getElementById('salon-location').innerText = salon.location;
+                document.getElementById('salon-contact').innerText = salon.contactNumber;
+                document.getElementById('salon-owner').innerText = salon.ownerName;
+
+                fetchServices();
+            } catch (error) {
+                console.error('Error fetching salon details:', error);
+            }
+        }
+
+        async function fetchServices() {
+            try {
+                const response = await axios.get(`http://localhost:3000/services/get-services/${salonId}`, {
+                    headers: { "Authorization": token },
+                });
+
+                servicesList.innerHTML = '';
+                response.data.forEach(service => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        ${service.name} - $${service.price} - ${service.duration}
+                        <button class="book-now" onclick="alert('Service Booked!')">Book Now</button>
+                    `;
+                    servicesList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching services:', error);
+            }
+        }
+
+        function showServiceForm() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('add-service-form').style.display = 'block';
+        }
+
+        function hideServiceForm() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('add-service-form').style.display = 'none';
+        }
+
+        async function addService() {
+    const serviceName = document.getElementById('service-name').value;
+    const servicePrice = document.getElementById('service-price').value;
+    const serviceDuration = document.getElementById('service-duration').value;
+    const serviceDescription = document.getElementById('service-description').value;  // New description field
+
+    if (!serviceName || !servicePrice || !serviceDuration || !serviceDescription) {
+        alert('Please fill out all fields.');
+        return;
+    }
+
+    try {
+        const response = await axios.post(`http://localhost:3000/services/add-services`, {
+            salonId,
+            name: serviceName,
+            price: servicePrice,
+            duration: serviceDuration,
+            description: serviceDescription,  // Send description in the request
+        }, {
+            headers: { "Authorization": token },
+        });
+
+        alert('Service added successfully!');
+        fetchServices();
+        hideServiceForm();
+    } catch (error) {
+        console.error('Error adding service:', error);
+
+        if (error.response && error.response.data.errors) {
+            alert(error.response.data.errors.map(err => err.msg).join(', '));
+        } else {
+            alert('Failed to add service. Please try again.');
+        }
+    }
+}
+
+
+        fetchSalonDetails();
+    </script>
+</body>
+</html>
