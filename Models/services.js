@@ -45,6 +45,12 @@ const Service = sequelize.define('Service', {
         onDelete: 'CASCADE', // Delete associated services if the salon is deleted
         onUpdate: 'CASCADE', // Update the salonId in services if the salon's ID changes
     },
+   // In your Sequelize Service model
+slots: {
+    type: DataTypes.JSON, // Use JSON to store the array of strings
+    allowNull: false,
+},
+
 }, {
     timestamps: true, // Adds `createdAt` and `updatedAt` fields
     tableName: 'Services', // Optional: Explicitly set the table name

@@ -21,6 +21,8 @@ app.use(express.static(path.join(__dirname, 'views')));
 const Users = require('./Models/users'); 
 const Salons = require('./Models/salons');
 const Services = require('./Models/services');
+const Bookings = require('./Models/Bookings');
+
 
 
 

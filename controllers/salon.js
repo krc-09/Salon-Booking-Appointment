@@ -11,7 +11,7 @@ exports.postSalonDetails = async (req, res, next) => {
             location,
             contactNumber,
             ownerName,
-            userId, // Save the userId as well
+            userId, 
         });
 
         console.log('Salon created successfully:', newSalon);
@@ -62,15 +62,27 @@ exports.getSalonsByUser = async (req, res) => {
         // Fetch all salons where userId matches
         const salons = await Salon.findAll({ where: { userId } });
 
+        // Return an empty array if no salons are found
         if (!salons || salons.length === 0) {
-            return res.status(404).json({
-                message: 'No salons found for the user',
-            });
+            return res.status(200).json([]); // Respond with an empty array
         }
 
         res.status(200).json(salons);
     } catch (error) {
         console.error('Error fetching salons by user:', error);
+        res.status(500).json({
+            message: 'Failed to fetch salons',
+            error: error.message,
+        });
+    }
+};
+
+exports.getAllSalons = async (req, res, next) => {
+    try {
+        const salons = await Salon.findAll(); // Get all salons
+        res.status(200).json(salons);
+    } catch (error) {
+        console.error('Error fetching salons:', error);
         res.status(500).json({
             message: 'Failed to fetch salons',
             error: error.message,
