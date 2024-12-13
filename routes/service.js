@@ -7,7 +7,8 @@ const router = express.Router();
 
 router.post('/add-services', authenticator.authenticate,serviceController.addService);
 router.get('/get-services/:salonId',authenticator.authenticate, serviceController.getServices);
-router.get('/get-services/:salonId',authenticator.authenticate, serviceController.getServices);
+router.get('/available-slots/:serviceId', authenticator.authenticate, serviceController.getAvailableSlots);
+
 
 
 

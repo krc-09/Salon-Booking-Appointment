@@ -93,7 +93,8 @@ const getAvailableSlots = async (req, res) => {
         }
 
         // Return the available slots
-        res.status(200).json({ availableSlots });
+        res.status(200).json({ slots: availableSlots });
+
     } catch (error) {
         console.error('Error fetching available slots:', error);
         res.status(500).json({ message: 'Failed to fetch available slots. Please try again later.' });
