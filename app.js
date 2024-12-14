@@ -23,6 +23,8 @@ app.use(express.static(path.join(__dirname, 'views')));
 
 const Users = require('./Models/users'); 
 const Salons = require('./Models/salons');
+const Bookings = require('./Models/Bookings');
+
 
 
 
@@ -32,14 +34,14 @@ const userRoutes = require('./routes/users');
 const salonRoutes = require('./routes/salons');
 const serviceRoutes = require('./routes/service');
 const paymentRoutes = require('./routes/payments');
-const bookingRoutes = require('./routes/bookings')
+
 
 
 app.use('/users', userRoutes);
 app.use('/salons',salonRoutes);
 app.use('/services',serviceRoutes);
 app.use('/payments',paymentRoutes);
-app.use('/bookings',bookingRoutes);
+
 
 
 
@@ -49,6 +51,10 @@ const sequelize = require('./utils/database');
 // Database relationships
 Users.hasMany(Salons);
 Salons.belongsTo(Users);
+Users.hasMany(Bookings);
+Bookings.belongsTo(Users);
+
+
 
 
 
