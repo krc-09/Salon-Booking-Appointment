@@ -9,12 +9,7 @@ const Booking = sequelize.define('booking', {
     allowNull: false,
     primaryKey: true,
   },
-  paymentid: {
-    type: Sequelize.STRING,
-    allowNull: false,
-},
-   
-  
+ 
   bookingid: {
     type: Sequelize.STRING,
     allowNull: false,
@@ -23,7 +18,7 @@ const Booking = sequelize.define('booking', {
     type: Sequelize.STRING,
     allowNull: false,
   },
-  serviceid: {
+  serviceId: {
     type: Sequelize.STRING,
     allowNull: false,
 },
