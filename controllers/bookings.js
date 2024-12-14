@@ -1,49 +1,56 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const app = express();
+const express = require('express');
+const Booking = require('../Models/Bookings'); // Ensure correct path to model
+const razorpay = require('razorpay'); // Include Razorpay SDK if you haven't already
 
+const app = express();
 app.use(express.json()); // Parse JSON payloads
 
-// Route to send confirmation email
-exports.Bookingmail = async (req, res) => {
-    const { email, service, date, time, paymentId } = req.body;
+// Function to handle booking post request
+exports.postBookingDetails = async (req, res) => {
+    const { serviceId, date, time, payment_id } = req.body;
+
+    // Check if payment_id and serviceId are valid
+    if (!payment_id || !serviceId) {
+        return res.status(400).send('Invalid booking details');
+    }
 
     try {
-        // Create a transporter
-        const transporter = nodemailer.createTransport({
-            service: "gmail", // Using Gmail as an example
-            auth: {
-                user: "your-email@gmail.com", // Replace with your email
-                pass: "your-app-password", // Use app password for Gmail
-            },
+        // Validate Razorpay payment
+        const isValidPayment = await validatePayment(payment_id);
+        if (!isValidPayment) {
+            return res.status(400).send('Invalid payment');
+        }
+
+        // Generate a unique booking ID
+        const bookingId = `BOOKING-${Date.now()}`;
+        const status = 'confirmed'; // Change this based on your application logic
+
+        // Save the booking in the database
+        const booking = await Booking.create({
+            paymentid: payment_id,
+            bookingid: bookingId,
+            status: status,
+            serviceid: serviceId,
+            // Add other details like date and time if necessary
         });
 
-        // Email content
-        const mailOptions = {
-            from: '"Salon Booking" <your-email@gmail.com>',
-            to: email, // Recipient's email
-            subject: "Booking Confirmation",
-            html: `
-                <h1>Booking Confirmed!</h1>
-                <p>Thank you for booking with us. Here are your booking details:</p>
-                <ul>
-                    <li><strong>Service:</strong> ${service}</li>
-                    <li><strong>Date:</strong> ${date}</li>
-                    <li><strong>Time:</strong> ${time}</li>
-                    <li><strong>Payment ID:</strong> ${paymentId}</li>
-                </ul>
-                <p>We look forward to serving you!</p>
-            `,
-        };
-
-        // Send the email
-        await transporter.sendMail(mailOptions);
-
-        res.status(200).send("Confirmation email sent successfully.");
+        res.status(201).json({ message: 'Booking confirmed', booking });
     } catch (error) {
-        console.error("Error sending email:", error);
-        res.status(500).send("Failed to send confirmation email.");
+        console.error('Error creating booking:', error);
+        res.status(500).send('Error confirming booking');
     }
-});
+};
 
-module.exports = app;
+
+// Function to validate Razorpay payment
+async function validatePayment(paymentId) {
+    // Optional: Verify payment with Razorpay
+    try {
+        const payment = await razorpay.payments.fetch(paymentId);
+        return payment.status === 'captured';
+    } catch (error) {
+        console.error('Error validating payment:', error);
+        return false;
+    }
+}
+
