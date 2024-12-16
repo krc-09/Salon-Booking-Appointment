@@ -23,9 +23,16 @@ const Booking = sequelize.define('booking', {
     allowNull: false,
 },
   
-  
+date: {
+  type: Sequelize.DATEONLY,
+  allowNull: false,
+  defaultValue: Sequelize.NOW, // Use Sequelize's NOW for a default date
+},
+time: {
+  type: Sequelize.STRING, // Correctly defined as STRING for "10AM-11AM"
+  allowNull: false,
+},
 });
-
 Users.hasMany(Booking, { foreignKey: 'userId', onDelete: 'CASCADE' }); // A user can have many bookings
 Booking.belongsTo(Users, { foreignKey: 'userId' }); 
 module.exports = Booking;

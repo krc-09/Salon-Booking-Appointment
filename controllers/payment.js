@@ -16,7 +16,12 @@ const createOrder = async (req, res) => {
     console.log('Request Body:', req.body);
 
     try {
-        const { amount, name, description, serviceId } = req.body;
+        const { amount, 
+            name, 
+            description, 
+            serviceId,
+            date,
+            time } = req.body;
 
         if (!amount || isNaN(amount) || amount <= 0) {
             return res.status(400).send({ success: false, msg: 'Invalid amount' });
@@ -30,7 +35,7 @@ if (!serviceId) {
 }
 
         const options = {
-            amount: amount * 100, // Convert to paise
+            amount: amount , // Convert to paise
             currency: 'INR',
             receipt: `${name}_${Date.now()}`,
         };
@@ -54,7 +59,7 @@ if (!serviceId) {
         await req.user.createBooking({
                             bookingid: order.id, 
                                 status: 'PENDING',
-                                serviceId,
+                                serviceId,date,time
                                
                            });
                             

@@ -223,7 +223,7 @@ async function submitBooking() {
 
         const options = {
             key: data.key_id, // Dynamically fetched Razorpay Key ID
-            amount: servicePrice * 100, // Price in paise
+            amount: servicePrice , // Price in paise
             currency: "INR",
             name: "Salon Booking",
             description: `Booking for service ID: ${serviceId}`,
