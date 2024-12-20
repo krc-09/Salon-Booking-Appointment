@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/database'); // Update the path to your Sequelize instance if needed
+const Salon = require('../Models/salons')
 
 const Service = sequelize.define('Service', {
     id: {
@@ -55,5 +56,11 @@ slots: {
     timestamps: true, // Adds `createdAt` and `updatedAt` fields
     tableName: 'Services', // Optional: Explicitly set the table name
 });
+
+
+
+Salon.hasMany(Service, { foreignKey: 'salonId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+Service.belongsTo(Salon, { foreignKey: 'salonId', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
 
 module.exports = Service;

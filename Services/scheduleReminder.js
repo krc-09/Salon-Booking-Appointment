@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const User = require('../Models/users'); 
 const Service = require('../Models/services'); // Corrected model name
 const Booking = require('../Models/Bookings');
+const Salon = require('../Models/salons')
 
 require('dotenv').config();
 
@@ -19,44 +20,44 @@ const transporter = nodemailer.createTransport({
 
 const sendConfirmationEmail = async (bookingId) => {
     try {
-        // Retrieve booking details, associated user, and service details
+        // Retrieve booking details
         const booking = await Booking.findByPk(bookingId, {
             include: [
                 {
                     model: User,
-                    attributes: ['email', 'name'] // Include necessary fields for User
+                    attributes: ['email', 'name']
                 },
                 {
                     model: Service,
-                    attributes: ['name'] // Include the service name from the Service model
+                    attributes: ['name', 'salonId'],
+                    include: {
+                        model: Salon,
+                        attributes: ['name']
+                    }
                 }
             ]
         });
 
-        // Check if booking or associated models are found
-        if (!booking || !booking.user || !booking.Service) {
-            throw new Error('Booking, associated user, or service not found');
+        // Log the fetched booking for debugging
+        console.log('Fetched Booking:', JSON.stringify(booking, null, 2));
+
+        // Check if booking and associations exist
+        if (!booking || !booking.user || !booking.Service || !booking.Service.Salon) {
+            throw new Error('Booking, associated user, service, or salon not found');
         }
 
-        // Extract necessary details
+        // Extract details
         const userEmail = booking.user.email;
         const userName = booking.user.name;
-        const serviceName = booking.Service.name; // Accessing the service name
-        const salonName = "Your Salon Name"; // Replace with actual salon name if needed
-
-        console.log("Booking ID:", booking.id);
-        console.log("User Email:", userEmail);
-        console.log("Service Name:", serviceName);
+        const serviceName = booking.Service.name;
+        const salonName = booking.Service.Salon.name;
 
         // Define email options
         const mailOptions = {
-            from: {
-                name: 'Salon-Point',
-                address: 'kankanarc2020@gmail.com'
-            },
+            from: { name: 'Salon-Point', address: 'kankanarc2020@gmail.com' },
             to: userEmail,
             subject: 'Booking Confirmation',
-            text: `Dear ${userName},\n\nYour booking with ID ${booking.id} has been successfully confirmed!\n\nService: ${serviceName}\nSalon: ${salonName}\n\nThank you for choosing our service.\n\nBest Regards,\nYour Company`
+            text: `Dear ${userName},\n\nYour booking with ID ${booking.id} has been successfully confirmed!\n\nService: ${serviceName}\nSalon: ${salonName}\n\nThank you for choosing our service.\n\nBest Regards,\nSalon-Point`
         };
 
         // Send email
@@ -66,6 +67,5 @@ const sendConfirmationEmail = async (bookingId) => {
         console.error('Error sending confirmation email:', error.message);
     }
 };
-
 
 module.exports = { sendConfirmationEmail };

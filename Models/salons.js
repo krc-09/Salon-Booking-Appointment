@@ -34,4 +34,6 @@ const Salon = sequelize.define('Salon', {
     timestamps: true, // To automatically add `createdAt` and `updatedAt`
 });
 
+
+
 module.exports = Salon;
