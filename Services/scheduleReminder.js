@@ -1,81 +1,71 @@
-const Booking = require('../Models/Bookings'); // Import Booking model
 const nodemailer = require('nodemailer');
-const schedule = require('node-schedule');
+const User = require('../Models/users'); 
+const Service = require('../Models/services'); // Corrected model name
+const Booking = require('../Models/Bookings');
+
+require('dotenv').config();
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or your email provider
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
-        user: 'kankanarc2020@gmail.com', // Your email
-        pass: 'Survival@420', // App password for your email
-    },
+        user: 'kankanarc2020@gmail.com',
+        pass: 'riqufsdrkrovvccm'
+    }
 });
 
-// Function to Send Reminder Emails
-const sendReminderEmail = async ({ email, name, date, time }) => {
+const sendConfirmationEmail = async (bookingId) => {
     try {
-        const mailOptions = {
-            from: 'your-email@gmail.com',
-            to: email,
-            subject: 'Service Reminder',
-            text: `Dear ${name},\n\nThis is a friendly reminder for your service scheduled on ${date} at ${time}.\n\nThank you for choosing us!`,
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`Reminder email sent to ${email}`);
-    } catch (error) {
-        console.error('Error sending email:', error.message);
-    }
-};
-
-// Function to Query Bookings and Send Reminders
-const sendRemindersForToday = async () => {
-    try {
-        const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
-
-        // Query bookings and include user details
-        const bookings = await Booking.findAll({
-            where: {
-                date: today,
-            },
+        // Retrieve booking details, associated user, and service details
+        const booking = await Booking.findByPk(bookingId, {
             include: [
                 {
-                    model: Users,
-                    attributes: ['emailId', 'name'], // Specify the fields you need from Users table
+                    model: User,
+                    attributes: ['email', 'name'] // Include necessary fields for User
                 },
-            ],
+                {
+                    model: Service,
+                    attributes: ['name'] // Include the service name from the Service model
+                }
+            ]
         });
 
-        if (bookings.length === 0) {
-            console.log('No bookings found for today.');
-            return;
+        // Check if booking or associated models are found
+        if (!booking || !booking.user || !booking.Service) {
+            throw new Error('Booking, associated user, or service not found');
         }
 
-        // Send reminder emails for each booking
-        for (const booking of bookings) {
-            const user = booking.User; // Access the associated User model
-            if (user && user.emailId) {
-                await sendReminderEmail({
-                    email: user.emailId,
-                    name: user.name,
-                    date: booking.date,
-                    time: booking.time,
-                });
-            } else {
-                console.log(`No email found for user with ID: ${booking.userId}`);
-            }
-        }
+        // Extract necessary details
+        const userEmail = booking.user.email;
+        const userName = booking.user.name;
+        const serviceName = booking.Service.name; // Accessing the service name
+        const salonName = "Your Salon Name"; // Replace with actual salon name if needed
+
+        console.log("Booking ID:", booking.id);
+        console.log("User Email:", userEmail);
+        console.log("Service Name:", serviceName);
+
+        // Define email options
+        const mailOptions = {
+            from: {
+                name: 'Salon-Point',
+                address: 'kankanarc2020@gmail.com'
+            },
+            to: userEmail,
+            subject: 'Booking Confirmation',
+            text: `Dear ${userName},\n\nYour booking with ID ${booking.id} has been successfully confirmed!\n\nService: ${serviceName}\nSalon: ${salonName}\n\nThank you for choosing our service.\n\nBest Regards,\nYour Company`
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log('Confirmation email sent successfully!');
     } catch (error) {
-        console.error('Error fetching bookings or sending emails:', error.message);
+        console.error('Error sending confirmation email:', error.message);
     }
 };
 
-// Schedule the Job to Run Daily
-const scheduleDailyReminders = () => {
-    schedule.scheduleJob('0 8 * * *', async () => {
-        console.log('Running daily reminder job...');
-        await sendRemindersForToday();
-    });
-};
 
-module.exports = { scheduleDailyReminders, sendReminderEmail };
+module.exports = { sendConfirmationEmail };

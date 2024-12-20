@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../utils/database');
 const Users = require('../Models/users');
+const Service = require('../Models/services');
 
 const Booking = sequelize.define('booking', {
   id: {
@@ -19,8 +20,12 @@ const Booking = sequelize.define('booking', {
     allowNull: false,
   },
   serviceId: {
-    type: Sequelize.STRING,
+    type: Sequelize.INTEGER,
     allowNull: false,
+    references: {
+      model: Service,    // Reference to the Service model
+      key: 'id',         // Link to the 'id' field in the Service table
+    },
 },
   
 date: {
@@ -35,4 +40,7 @@ time: {
 });
 Users.hasMany(Booking, { foreignKey: 'userId', onDelete: 'CASCADE' }); // A user can have many bookings
 Booking.belongsTo(Users, { foreignKey: 'userId' }); 
+
+Service.hasMany(Booking, { foreignKey: 'serviceId' });  // A service can have many bookings
+Booking.belongsTo(Service, { foreignKey: 'serviceId' }); 
 module.exports = Booking;
