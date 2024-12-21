@@ -68,4 +68,55 @@ const sendConfirmationEmail = async (bookingId) => {
     }
 };
 
-module.exports = { sendConfirmationEmail };
+const sendReminderEmail = async (bookingId) => {
+    try {
+        // Retrieve booking details
+        const booking = await Booking.findByPk(bookingId, {
+            include: [
+                {
+                    model: User,
+                    attributes: ['email', 'name']
+                },
+                {
+                    model: Service,
+                    attributes: ['name', 'salonId'],
+                    include: {
+                        model: Salon,
+                        attributes: ['name']
+                    }
+                }
+            ]
+        });
+
+        // Log the fetched booking for debugging
+        console.log('Fetched Booking for Reminder:', JSON.stringify(booking, null, 2));
+
+        // Check if booking and associations exist
+        if (!booking || !booking.user || !booking.Service || !booking.Service.Salon) {
+            throw new Error('Booking, associated user, service, or salon not found');
+        }
+
+        // Extract details
+        const userEmail = booking.user.email;
+        const userName = booking.user.name;
+        const serviceName = booking.Service.name;
+        const salonName = booking.Service.Salon.name;
+
+        // Define reminder email options
+        const mailOptions = {
+            from: { name: 'Salon-Point', address: 'kankanarc2020@gmail.com' },
+            to: userEmail,
+            subject: 'Appointment Reminder',
+            text: `Dear ${userName},\n\nThis is a friendly reminder for your upcoming appointment.\n\nService: ${serviceName}\nSalon: ${salonName}\nDate and Time: ${booking.date}\n\nWe look forward to serving you!\n\nBest Regards,\nSalon-Point`
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log('Reminder email sent successfully!');
+    } catch (error) {
+        console.error('Error sending reminder email:', error.message);
+    }
+};
+
+
+module.exports = { sendConfirmationEmail ,sendReminderEmail};

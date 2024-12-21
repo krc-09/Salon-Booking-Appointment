@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const cron = require('node-cron');
+const { sendReminderEmail } = require('./Services/scheduleReminder');
+
+
 
 
 
@@ -58,7 +62,26 @@ Users.hasMany(Bookings);
 Bookings.belongsTo(Users);
 
 
+cron.schedule('0 9 * * *', async () => {
+  console.log('Running reminder email job...');
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
+  try {
+      // Find bookings for today
+      const bookings = await Bookings.findAll({
+          where: { date: today } // Assumes `date` field in Booking model stores the date in YYYY-MM-DD
+      });
+
+      // Send reminder emails for each booking
+      bookings.forEach((booking) => {
+          sendReminderEmail(booking.id);
+      });
+
+      console.log(`Reminder emails sent for ${bookings.length} bookings.`);
+  } catch (error) {
+      console.error('Error running reminder email job:', error.message);
+  }
+});
 
 
 
