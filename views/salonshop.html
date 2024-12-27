@@ -18,6 +18,7 @@
 
     <div class="buttons">
         <button class="add-services" onclick="showServiceForm()">Add Services</button>
+        <button class="add-services" onclick="showtaffForm()">Add Staff</button>
     </div>
 
     <ul class="services-list" id="services-list">
@@ -36,6 +37,24 @@
         
         <button onclick="addService()">Submit</button>
         <button onclick="hideServiceForm()">Cancel</button>
+    </div>
+    <div class="add-staff-form" id="add-staff-form">
+        <h3>Add Staff</h3>
+        <input type="text" id="staff-name" placeholder="Staff Name" required>
+    
+        <!-- Dropdown for Service -->
+        <select id="service-dropdown" required>
+            <option value="">Select a Service</option>
+            <!-- Options will be dynamically added here -->
+        </select>
+    
+        <input type="text" id="email" placeholder="Email" required>
+        <input type="text" id="phone" placeholder="Phone" required>
+        <input type="text" id="role" placeholder="Role (e.g., Staff, Manager)" required>
+        <input type="number" id="salary" placeholder="Salary" required>
+    
+        <button onclick="addStaff()">Submit</button>
+        <button onclick="hideStaffForm()">Cancel</button>
     </div>
     
     <div id="booking-modal" style="display: none;">
@@ -113,6 +132,36 @@
                 timeDropdown.innerHTML = '<option value="">No slots available</option>';
             }
         }
+        async function loadServices(salonId) {
+    try {
+        // Construct the URL with the salonId
+        const salonId = params.get('salonId');
+    const token = localStorage.getItem('token');
+        const response =  await axios.get(`http://localhost:3000/services/get-services/${salonId}`, {
+                    headers: { "Authorization": token },
+                });
+console.log(response);
+      
+        
+       
+
+        const dropdown = document.getElementById('service-dropdown');
+        dropdown.innerHTML = '<option value="">Select a Service</option>'; // Clear existing options
+
+        response.data.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.name; // Use service ID as the value
+            option.textContent = service.name; // Use service name as the display
+            dropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading services:', error);
+    }
+}
+
+
+    // Call loadServices on page load
+    document.addEventListener('DOMContentLoaded', loadServices);
 
         function closeBookingModal() {
             document.getElementById('booking-modal').style.display = 'none';
@@ -178,6 +227,85 @@
         } else {
             alert('Failed to add service. Please try again.');
         }
+    }
+}
+
+async function addStaff() {
+    // Retrieve input values from the form
+    const Staffemail = document.getElementById('email').value;
+    const Staffrole = document.getElementById('role').value;
+    const Staffsalary = document.getElementById('salary').value;
+    const Staffservice = document.getElementById('service-dropdown').value; // Matches backend 'serviceName'
+    const Staffname = document.getElementById('staff-name').value;
+    const Staffphone = document.getElementById('phone').value;
+
+    console.log(Staffservice); 
+
+    // Retrieve salonId from URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const salonId = params.get('salonId');
+
+    // Token for authentication
+    const token = localStorage.getItem('token');
+
+    // Validate required fields
+    if (!Staffname) {
+    alert('Staff name is required.');
+    return;
+}
+if (!Staffemail) {
+    alert('Staff email is required.');
+    return;
+}
+if (!Staffphone) {
+    alert('Staff phone number is required.');
+    return;
+}
+if (!Staffrole) {
+    alert('Staff role is required.');
+    return;
+}
+if (!Staffsalary) {
+    alert('Staff salary is required.');
+    return;
+}
+if (!Staffservice) {
+    alert('Staff service is required.');
+    return;
+}
+if (!salonId) {
+    alert('Salon ID is missing. Please check the URL or contact support.');
+    return;
+}
+
+    try {
+        // Make a POST request to the backend to add staff
+        const response = await axios.post(
+            'http://localhost:3000/staff/add-staff', // Match the route from the controller
+            {
+                name: Staffname,
+                email: Staffemail,
+                phone: Staffphone,
+                role: Staffrole,
+                salary: parseFloat(Staffsalary), // Convert salary to a number
+                serviceName: Staffservice, // Matches backend controller key
+                salonId: salonId, // Ensure salonId is included
+            },
+            {
+                headers: { Authorization: token }, // Attach token for authorization
+            }
+        );
+
+        // Handle success response
+        if (response.status === 201) {
+            alert('Staff added successfully!');
+            document.getElementById('staff-form').reset(); // Reset form fields
+            fetchStaffList(); // Refresh the staff list (if implemented)
+        }
+    } catch (error) {
+        // Handle errors
+        console.error('Error adding staff:', error);
+        alert(error.response?.data?.message || 'Failed to add staff. Please try again.');
     }
 }
 
@@ -316,7 +444,6 @@ response.data.forEach(service => {
             }
         }
 
-        
      
 
         fetchSalonDetails();

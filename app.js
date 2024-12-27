@@ -31,6 +31,8 @@ app.use(express.static(path.join(__dirname, 'views')));
 const Users = require('./Models/users'); 
 const Salons = require('./Models/salons');
 const Bookings = require('./Models/Bookings');
+const Services = require('./Models/services');
+const Staff = require('./Models/staff');
 
 
 
@@ -41,6 +43,7 @@ const userRoutes = require('./routes/users');
 const salonRoutes = require('./routes/salons');
 const serviceRoutes = require('./routes/service');
 const paymentRoutes = require('./routes/payments');
+const staffRoutes = require('./routes/staff');
 
 
 
@@ -48,6 +51,7 @@ app.use('/users', userRoutes);
 app.use('/salons',salonRoutes);
 app.use('/services',serviceRoutes);
 app.use('/payments',paymentRoutes);
+app.use('/staff',staffRoutes);
 
 
 
@@ -60,6 +64,11 @@ Users.hasMany(Salons);
 Salons.belongsTo(Users);
 Users.hasMany(Bookings);
 Bookings.belongsTo(Users);
+
+Salons.hasMany(Services);
+Services.belongsTo(Salons);
+
+
 
 
 cron.schedule('0 9 * * *', async () => {
